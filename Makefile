@@ -10,6 +10,7 @@ AVRDUDE=avrdude
 DEVICE ?= atmega168
 OBJECT_FILES=rc.o
 OBJ2HEX=avr-objcopy
+LDFLAGS=-Wl,-gc-sections -lpololu_$(DEVICE) -Wl,-relax
 
 all: $(TARGET).hex
 
