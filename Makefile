@@ -1,7 +1,7 @@
 MCU=atmega328p
 PORT=$(shell pavr2cmd --prog-port)
 CFLAGS=-g -Wall -mcall-prologues -mmcu=$(MCU) $(DEVICE_SPECIFIC_CFLAGS) -Os
-LDFLAGS=-Wl,-gc-sections -Wl,-relax
+
 CC=avr-gcc
 TARGET=rc
 
