@@ -8,6 +8,7 @@
 ************************************************/
 
 #include <pololu/orangutan.h>
+#include <arduino.h>
 
 #define headlight_pin IO_D7
 
@@ -22,7 +23,7 @@ int main()
 {
   set_motors(0, 0);
   red_led(1);
-  delay_ms(100);
+  delay_ms(500);
   set_digital_output(headlight_pin, LOW);
   set_digital_input(throttle_pin, PULL_UP_ENABLED);
   set_digital_input(steering_pin, PULL_UP_ENABLED);
@@ -61,6 +62,8 @@ void read_pins(int* throttle, int* steering, int* ch3, int neutralPulse){
   red_led(10);
   int t_counter = 0, s_counter = 0, ch3_counter = 0;
   long int timeout = 20000000;
+
+  pulseIn(throttle_pin, HIGH);
 
   while(is_digital_input_high(throttle_pin)&&timeout-- > 0);
   while(!is_digital_input_high(throttle_pin)&&timeout-- > 0);
