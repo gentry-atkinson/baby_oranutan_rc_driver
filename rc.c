@@ -62,18 +62,15 @@ int main()
     }
 
     set_motors(motor1Out, motor2Out);
-
-    // set_digital_output(headlight_pin, HIGH);
-    // delay_ms(neutralPulse/10);
-    // set_digital_output(headlight_pin, LOW);
-    // delay_ms(neutralPulse/10);
   }
 }
 
 void set_neutral_pulse(int* neutralPulse){
   unsigned long pulse_width;
-  pulse_width = get_last_high_pulse(0);
-  *neutralPulse = (pulse_to_microseconds(pulse_width));
+  do{
+    pulse_width = get_last_high_pulse(0);
+    *neutralPulse = (pulse_to_microseconds(pulse_width));
+  }while(*neutralPulse == 0);
 }
 
 void read_pins(int* throttle, int* steering, int* ch3){
@@ -81,16 +78,14 @@ void read_pins(int* throttle, int* steering, int* ch3){
   red_led(1);
   unsigned long pulse_width;
 
-  do{
-    pulse_width = get_last_high_pulse(0);
-    *throttle = (pulse_to_microseconds(pulse_width));
+  pulse_width = get_last_high_pulse(0);
+  *throttle = (pulse_to_microseconds(pulse_width));
 
-    pulse_width = get_last_high_pulse(1);
-    *steering = (pulse_to_microseconds(pulse_width));
+  pulse_width = get_last_high_pulse(1);
+  *steering = (pulse_to_microseconds(pulse_width));
 
-    pulse_width = get_last_high_pulse(2);
-    *ch3 = (pulse_to_microseconds(pulse_width));
-  }while(*throttle==0);
+  pulse_width = get_last_high_pulse(2);
+  *ch3 = (pulse_to_microseconds(pulse_width));
 
 
   red_led(0);
