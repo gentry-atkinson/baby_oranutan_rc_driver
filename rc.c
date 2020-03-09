@@ -40,6 +40,7 @@ int main()
   int throttle=0, steering=0, ch3=0;
   int motor1Out, motor2Out;
   int neutralPulse;
+
   set_neutral_pulse(&neutralPulse);
 
   while(1)
@@ -52,14 +53,16 @@ int main()
     else{
      set_digital_output(headlight_pin, LOW);
     }
-    if(throttle==0){
+    if(throttle==0 || steering==0){
       set_motors(0,0);
       motor1Out=0;
       motor2Out=0;
     }
     else{
-      motor1Out = -(throttle-neutralPulse)/2 - (steering-neutralPulse)/2;
-      motor2Out = (throttle-neutralPulse)/2 - (steering-neutralPulse)/2;
+      motor1Out = -(throttle-neutralPulse) - (steering-neutralPulse);
+      motor2Out = (throttle-neutralPulse) - (steering-neutralPulse);
+      //motor1Out = -(255);
+      //motor2Out = (255);
     }
 
     set_motors(motor1Out, motor2Out);
@@ -67,35 +70,55 @@ int main()
 }
 
 void set_neutral_pulse(int* neutralPulse){
-  unsigned long pulse_width;
-  while(!new_high_pulse(throttle_pin)){;}
+  static struct PulseInputStruct pulseInfo;
+  long int counter=0;
 
-  pulse_width = get_last_high_pulse(0);
-  *neutralPulse = (pulse_to_microseconds(pulse_width));
+  do{
+    get_pulse_info(0, &pulseInfo);
+    counter++;
+    if(counter%10000 == 0){
+      if(counter%20000 == 0){
+        set_digital_output(headlight_pin, LOW);
+        counter = 0;
+      }
+      else{
+        set_digital_output(headlight_pin, HIGH);
+      }
+    }
+  }while((get_ticks()-pulseInfo.lastPCTime) > 1000);
+
+  *neutralPulse=(pulse_to_microseconds(pulseInfo.lastHighPulse));
+  set_digital_output(headlight_pin, LOW);
+
 }
 
 void read_pins(int* throttle, int* steering, int* ch3){
 
   red_led(1);
-  unsigned long pulse_width;
-  static int pulse_counter = 0;
+
+  static struct PulseInputStruct pulseInfo;
+  get_pulse_info(0, &pulseInfo);
 
   //freeze if signal drops
-  if(new_high_pulse(throttle_pin)) pulse_counter = 0;
-  else {
-    pulse_counter++;
+  if((get_ticks()-pulseInfo.lastPCTime) > 10000){
     *throttle = 0;
     *steering = 0;
+    return;
   }
 
-  pulse_width = get_last_high_pulse(0);
-  *throttle = (pulse_to_microseconds(pulse_width));
+  *throttle = (pulse_to_microseconds(pulseInfo.lastHighPulse));
 
-  pulse_width = get_last_high_pulse(1);
-  *steering = (pulse_to_microseconds(pulse_width));
+  get_pulse_info(1, &pulseInfo);
+  *steering = (pulse_to_microseconds(pulseInfo.lastHighPulse));
 
-  pulse_width = get_last_high_pulse(2);
-  *ch3 = (pulse_to_microseconds(pulse_width));
+  if((get_ticks()-pulseInfo.lastPCTime) > 10000){
+    *throttle = 0;
+    *steering = 0;
+    return;
+  }
+
+  get_pulse_info(2, &pulseInfo);
+  *ch3 = (pulse_to_microseconds(pulseInfo.lastHighPulse));
 
 
   red_led(0);
