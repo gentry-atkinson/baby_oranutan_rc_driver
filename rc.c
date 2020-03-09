@@ -78,6 +78,15 @@ void read_pins(int* throttle, int* steering, int* ch3){
 
   red_led(1);
   unsigned long pulse_width;
+  static int pulse_counter = 0;
+
+  //freeze if signal drops
+  if(new_high_pulse(throttle_pin)) pulse_counter = 0;
+  else {
+    pulse_counter++;
+    *throttle = 0;
+    *steering = 0;
+  }
 
   pulse_width = get_last_high_pulse(0);
   *throttle = (pulse_to_microseconds(pulse_width));
