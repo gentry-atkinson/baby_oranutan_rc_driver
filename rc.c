@@ -27,6 +27,7 @@ int main()
 {
   set_motors(0, 0);
   red_led(1);
+  green_led(1);
   //Give the receiver time to start
   pulse_in_start((unsigned char[]){throttle_pin, steering_pin, ch3_pin}, 3);
   delay_ms(500);
@@ -67,10 +68,10 @@ int main()
 
 void set_neutral_pulse(int* neutralPulse){
   unsigned long pulse_width;
-  do{
-    pulse_width = get_last_high_pulse(0);
-    *neutralPulse = (pulse_to_microseconds(pulse_width));
-  }while(*neutralPulse == 0);
+  while(!new_high_pulse(throttle_pin)){;}
+
+  pulse_width = get_last_high_pulse(0);
+  *neutralPulse = (pulse_to_microseconds(pulse_width));
 }
 
 void read_pins(int* throttle, int* steering, int* ch3){
