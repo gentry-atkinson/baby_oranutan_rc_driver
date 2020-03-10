@@ -60,10 +60,13 @@ int main() {
     else{
       motor1Out = (throttle-neutralThrottlePulse) - (steering-neutralSteeringPulse);
       motor2Out = -(throttle-neutralThrottlePulse) - (steering-neutralSteeringPulse);
-      //motor1Out = -(255);
-      //motor2Out = (255);
     }
 
+    if (motor1Out < -255) motor1Out = -255;
+    else if (motor1Out > 255) motor2Out = 255;
+
+    if (motor2Out < -255) motor2Out = -255;
+    else if (motor2Out > 255) motor2Out = 255;
     set_motors(motor1Out, motor2Out);
   }
   return 0;
@@ -72,16 +75,19 @@ int main() {
 void set_neutral_pulse(int* neutralThrottlePulse, int *neutralSteeringPulse){
   static struct PulseInputStruct pulseInfo;
   set_digital_output(headlight_pin, HIGH);
+  int tp=0, sp=0;
 
   do{
     get_pulse_info(0, &pulseInfo);
-  }while((get_ticks()-pulseInfo.lastPCTime) > 1000);
-  *neutralThrottlePulse=(pulse_to_microseconds(pulseInfo.lastHighPulse));
+    tp = pulse_to_microseconds(pulseInfo.lastHighPulse);
+  }while((get_ticks()-pulseInfo.lastPCTime) > 10000 || tp < 1300 || tp > 1700);
+  *neutralThrottlePulse= tp;
 
   do{
     get_pulse_info(1, &pulseInfo);
-  }while((get_ticks()-pulseInfo.lastPCTime) > 1000);
-  *neutralSteeringPulse=(pulse_to_microseconds(pulseInfo.lastHighPulse));
+    sp = pulse_to_microseconds(pulseInfo.lastHighPulse);
+  }while((get_ticks()-pulseInfo.lastPCTime) > 10000 || sp < 1300 || sp > 1700);
+  *neutralSteeringPulse= sp;
 
   set_digital_output(headlight_pin, LOW);
 
@@ -95,7 +101,7 @@ void read_pins(int* throttle, int* steering, int* ch3){
   get_pulse_info(0, &pulseInfo);
 
   //freeze if signal drops
-  if((get_ticks()-pulseInfo.lastPCTime) > 200000){
+  if((get_ticks()-pulseInfo.lastPCTime) > 400000){
     *throttle = 0;
     *steering = 0;
     return;
@@ -106,7 +112,7 @@ void read_pins(int* throttle, int* steering, int* ch3){
   get_pulse_info(1, &pulseInfo);
   *steering = (pulse_to_microseconds(pulseInfo.lastHighPulse));
 
-  if((get_ticks()-pulseInfo.lastPCTime) > 200000){
+  if((get_ticks()-pulseInfo.lastPCTime) > 400000){
     *throttle = 0;
     *steering = 0;
     return;
