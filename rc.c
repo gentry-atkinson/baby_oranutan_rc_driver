@@ -24,8 +24,9 @@ int main() {
 
   //Start Up section
   //Give the receiver time to start
+  delay_ms(250);
   pulse_in_start((unsigned char[]){throttle_pin, steering_pin, ch3_pin}, 3);
-  delay_ms(500);
+  delay_ms(250);
   set_digital_output(headlight_pin, LOW);
   set_digital_input(throttle_pin, PULL_UP_ENABLED);
   set_digital_input(steering_pin, PULL_UP_ENABLED);
@@ -84,6 +85,7 @@ void set_neutral_pulse(int* neutralThrottlePulse, int *neutralSteeringPulse){
 
   //Hold until a throttle signal is read
   do{
+    delay_ms(20);
     get_pulse_info(0, &pulseInfo);
     tp = pulse_to_microseconds(pulseInfo.lastHighPulse);
   }while((get_ticks()-pulseInfo.lastPCTime) > 10000 || tp < 1300 || tp > 1700);
@@ -91,6 +93,7 @@ void set_neutral_pulse(int* neutralThrottlePulse, int *neutralSteeringPulse){
 
   //Hold until a steeing signal is read
   do{
+    delay_ms(20);
     get_pulse_info(1, &pulseInfo);
     sp = pulse_to_microseconds(pulseInfo.lastHighPulse);
   }while((get_ticks()-pulseInfo.lastPCTime) > 10000 || sp < 1300 || sp > 1700);
