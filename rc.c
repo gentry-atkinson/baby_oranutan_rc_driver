@@ -21,13 +21,12 @@
 #define ANY_PULSE   3
 
 void read_pins(int*, int*, int*);
-void set_neutral_pulse(int*);
+void set_neutral_pulse(int*, int*);
 
-int main()
-{
+int main() {
   set_motors(0, 0);
   red_led(1);
-  green_led(1);
+
   //Give the receiver time to start
   pulse_in_start((unsigned char[]){throttle_pin, steering_pin, ch3_pin}, 3);
   delay_ms(500);
@@ -39,15 +38,15 @@ int main()
 
   int throttle=0, steering=0, ch3=0;
   int motor1Out, motor2Out;
-  int neutralPulse;
+  int neutralThrottlePulse=0, neutralSteeringPulse=0;
 
-  set_neutral_pulse(&neutralPulse);
+  set_neutral_pulse(&neutralThrottlePulse, &neutralSteeringPulse);
 
   while(1)
   {
     read_pins(&throttle, &steering, &ch3);
 
-    if (ch3 > neutralPulse){
+    if (ch3 > neutralThrottlePulse){
      set_digital_output(headlight_pin, HIGH);
     }
     else{
@@ -59,35 +58,31 @@ int main()
       motor2Out=0;
     }
     else{
-      motor1Out = -(throttle-neutralPulse) - (steering-neutralPulse);
-      motor2Out = (throttle-neutralPulse) - (steering-neutralPulse);
+      motor1Out = (throttle-neutralThrottlePulse) - (steering-neutralSteeringPulse);
+      motor2Out = -(throttle-neutralThrottlePulse) - (steering-neutralSteeringPulse);
       //motor1Out = -(255);
       //motor2Out = (255);
     }
 
     set_motors(motor1Out, motor2Out);
   }
+  return 0;
 }
 
-void set_neutral_pulse(int* neutralPulse){
+void set_neutral_pulse(int* neutralThrottlePulse, int *neutralSteeringPulse){
   static struct PulseInputStruct pulseInfo;
-  long int counter=0;
+  set_digital_output(headlight_pin, HIGH);
 
   do{
     get_pulse_info(0, &pulseInfo);
-    counter++;
-    if(counter%10000 == 0){
-      if(counter%20000 == 0){
-        set_digital_output(headlight_pin, LOW);
-        counter = 0;
-      }
-      else{
-        set_digital_output(headlight_pin, HIGH);
-      }
-    }
   }while((get_ticks()-pulseInfo.lastPCTime) > 1000);
+  *neutralThrottlePulse=(pulse_to_microseconds(pulseInfo.lastHighPulse));
 
-  *neutralPulse=(pulse_to_microseconds(pulseInfo.lastHighPulse));
+  do{
+    get_pulse_info(1, &pulseInfo);
+  }while((get_ticks()-pulseInfo.lastPCTime) > 1000);
+  *neutralSteeringPulse=(pulse_to_microseconds(pulseInfo.lastHighPulse));
+
   set_digital_output(headlight_pin, LOW);
 
 }
@@ -100,7 +95,7 @@ void read_pins(int* throttle, int* steering, int* ch3){
   get_pulse_info(0, &pulseInfo);
 
   //freeze if signal drops
-  if((get_ticks()-pulseInfo.lastPCTime) > 10000){
+  if((get_ticks()-pulseInfo.lastPCTime) > 200000){
     *throttle = 0;
     *steering = 0;
     return;
@@ -111,7 +106,7 @@ void read_pins(int* throttle, int* steering, int* ch3){
   get_pulse_info(1, &pulseInfo);
   *steering = (pulse_to_microseconds(pulseInfo.lastHighPulse));
 
-  if((get_ticks()-pulseInfo.lastPCTime) > 10000){
+  if((get_ticks()-pulseInfo.lastPCTime) > 200000){
     *throttle = 0;
     *steering = 0;
     return;
