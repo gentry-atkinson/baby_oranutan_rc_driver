@@ -5,6 +5,13 @@
 *Description: this file is being written as a driver for the fairyweight robot
 *    Uncle Traveling Matt but it should serve as a general purpose program for
 *    tank-style drive with a 3-channel mixed controller.
+*Hardware:
+*   Processor: Pololu Baby Orangutan B-328 w/ Atmega 328P
+*   Motors: Pololu MicroMetal 12v geared at 15:1
+*   Receiver: FlySky FS-GR3E 3-channel
+*   Battery: E-flite 7.4v 200mAh 2S LiPo
+*   Some hardware store polycabonate, an LED, motor mounts, screws, wheels,
+*   and an accelerometer that isn't used in this project.
 ************************************************/
 
 #include <pololu/orangutan.h>
@@ -15,8 +22,9 @@
 #define steering_pin IO_B0
 #define ch3_pin IO_B2
 
-void read_pins(int*, int*, int*);
-void set_neutral_pulse(int*, int*);
+//Helper Functions
+void read_pins(unsigned int*, unsigned int*, unsigned int*);
+void set_neutral_pulse(unsigned int*, unsigned int*);
 
 int main() {
   set_motors(0, 0);
@@ -33,9 +41,9 @@ int main() {
   set_digital_input(ch3_pin, PULL_UP_ENABLED);
   red_led(0);
 
-  int throttle=0, steering=0, ch3=0;
+  unsigned int throttle=0, steering=0, ch3=0;
   int motor1Out, motor2Out;
-  int neutralThrottlePulse=0, neutralSteeringPulse=0;
+  unsigned int neutralThrottlePulse=0, neutralSteeringPulse=0;
 
   set_neutral_pulse(&neutralThrottlePulse, &neutralSteeringPulse);
 
@@ -78,10 +86,14 @@ int main() {
   return 0;
 }
 
-void set_neutral_pulse(int* neutralThrottlePulse, int *neutralSteeringPulse){
+//Reads the neutral pulse at startup
+//Pre-condition: the transmitter is in a neutral position
+//Post-condition: the two neutral pulses are written and the motors are static
+//Returns: non
+void set_neutral_pulse(unsigned int* neutralThrottlePulse, unsigned int* neutralSteeringPulse){
   static struct PulseInputStruct pulseInfo;
   set_digital_output(headlight_pin, HIGH);
-  int tp=0, sp=0;
+  unsigned int tp=0, sp=0;
 
   //Hold until a throttle signal is read
   do{
@@ -103,7 +115,13 @@ void set_neutral_pulse(int* neutralThrottlePulse, int *neutralSteeringPulse){
   return;
 }
 
-void read_pins(int* throttle, int* steering, int* ch3){
+//Reads the pulse width from the 3 pins connected to the receiver
+//Pre-condition: the robot is powered on and running
+//Post-condition: steering and throttle will be set to 0 if the signal has
+//      dropped. Otherwise throttle, steering, and ch3 will be written with the
+//      pulse width of the 3 input pins in microseconds. Expected values are
+//      1000-2000;
+void read_pins(unsigned int* throttle, unsigned int* steering, unsigned int* ch3){
 
   red_led(1);
   static struct PulseInputStruct pulseInfo;
