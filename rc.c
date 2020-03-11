@@ -85,7 +85,7 @@ void set_neutral_pulse(int* neutralThrottlePulse, int *neutralSteeringPulse){
 
   //Hold until a throttle signal is read
   do{
-    delay_ms(20);
+    delay_ms(50);
     get_pulse_info(0, &pulseInfo);
     tp = pulse_to_microseconds(pulseInfo.lastHighPulse);
   }while((get_ticks()-pulseInfo.lastPCTime) > 10000 || tp < 1300 || tp > 1700);
@@ -93,7 +93,7 @@ void set_neutral_pulse(int* neutralThrottlePulse, int *neutralSteeringPulse){
 
   //Hold until a steeing signal is read
   do{
-    delay_ms(20);
+    delay_ms(50);
     get_pulse_info(1, &pulseInfo);
     sp = pulse_to_microseconds(pulseInfo.lastHighPulse);
   }while((get_ticks()-pulseInfo.lastPCTime) > 10000 || sp < 1300 || sp > 1700);
